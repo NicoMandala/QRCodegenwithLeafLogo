@@ -117,7 +117,7 @@ def main():
             )
     
     st.markdown("---")
-    st.markdown("© 2024 Leaf Space. All rights reserved.")
+    st.markdown("© 2025 Leaf Space. All rights reserved.")
 
 if __name__ == "__main__":
     main()
