@@ -15,11 +15,14 @@ def create_qr_base(url, fill_color="#A7E163", back_color="white"):
     qr.make(fit=True)
     return qr.make_image(fill_color=fill_color, back_color=back_color).convert('RGBA')
 
-def prepare_logo(logo_image, qr_size, scale=0.20):  # Increased scale for better visibility
-    """Resize and prepare the logo for overlay."""
+def prepare_logo(logo_image, qr_size, scale=0.15):
+    """Resize the logo while preserving aspect ratio."""
     logo = logo_image.convert('RGBA')
-    logo_size = int(qr_size[0] * scale)
-    return logo.resize((logo_size, logo_size))
+    # Calculate new width based on QR size while maintaining aspect ratio
+    new_width = int(qr_size[0] * scale)
+    width_percent = (new_width / float(logo.size[0]))
+    new_height = int(float(logo.size[1]) * width_percent)
+    return logo.resize((new_width, new_height), Image.Resampling.LANCZOS)
 
 def generate_custom_qr_code(url, custom_text):
     """Generate a custom QR code with logo and styling."""
@@ -29,7 +32,7 @@ def generate_custom_qr_code(url, custom_text):
     # Load the logo from file
     try:
         logo_image = Image.open("logo.png")
-        logo = prepare_logo(logo_image, qr_image.size, scale=0.15)  # Slightly smaller logo
+        logo = prepare_logo(logo_image, qr_image.size)
     except FileNotFoundError:
         st.error("Logo file not found. Please ensure 'logo.png' is in the same directory.")
         return None
@@ -37,7 +40,8 @@ def generate_custom_qr_code(url, custom_text):
     # Calculate dimensions
     padding = 40
     border_padding = 2
-    bottom_height = max(logo.size[1], 32) + 20  # Height based on larger of logo or text height
+    font_size = 36  # Increased font size
+    bottom_height = max(logo.size[1], font_size) + 30  # Increased bottom spacing
     
     # Create final image
     result = Image.new('RGBA', 
@@ -61,7 +65,7 @@ def generate_custom_qr_code(url, custom_text):
     
     # Prepare text
     try:
-        font = ImageFont.truetype("arial.ttf", 28)
+        font = ImageFont.truetype("arial.ttf", font_size)  # Using larger font size
     except OSError:
         font = ImageFont.load_default()
     
