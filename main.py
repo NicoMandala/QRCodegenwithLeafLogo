@@ -24,7 +24,7 @@ def prepare_logo(logo_image, qr_size, scale=0.15):
     new_height = int(float(logo.size[1]) * width_percent)
     return logo.resize((new_width, new_height), Image.Resampling.LANCZOS)
 
-def generate_custom_qr_code(url, custom_text):
+def generate_custom_qr_code(url):
     """Generate a custom QR code with logo and styling."""
     # Create base QR code
     qr_image = create_qr_base(url)
@@ -40,8 +40,7 @@ def generate_custom_qr_code(url, custom_text):
     # Calculate dimensions
     padding = 40
     border_padding = 2
-    font_size = 36  # Increased font size
-    bottom_height = max(logo.size[1], font_size) + 30  # Increased bottom spacing
+    bottom_height = logo.size[1] + 30  
     
     # Create final image
     result = Image.new('RGBA', 
@@ -63,36 +62,16 @@ def generate_custom_qr_code(url, custom_text):
         width=2
     )
     
-    # Prepare text
-    try:
-        font = ImageFont.truetype("arial.ttf", font_size)  # Using larger font size
-    except OSError:
-        font = ImageFont.load_default()
-    
-    text_width = draw.textlength(custom_text, font=font)
-    
-    # Calculate positions for logo and text
+    # Place logo at the bottom left
     bottom_y = padding + qr_image.size[1] + 25  # Space from QR code
     logo_x = padding  # Logo at left padding
-    text_x = result.size[0] - padding - text_width  # Text aligned to right
-    
-    # Center text vertically with logo
-    text_y = bottom_y + (logo.size[1] - font.size) // 2
-    
-    # Place logo and text
     result.paste(logo, (logo_x, bottom_y), logo)
-    draw.text(
-        (text_x, text_y),
-        custom_text,
-        font=font,
-        fill="#825DC7"
-    )
     
     return result
 
 def main():
     """Main application function."""
-    st.set_page_config(page_title="Leaf Space QR Code Generator", page_icon="🍃")
+    st.set_page_config(page_title="Leaf Space QR Code Generator", page_icon="")
     st.title("Leaf Space QR Code Generator")
     
     url = st.text_input(
@@ -100,19 +79,15 @@ def main():
         "https://outlook.office365.com/owa/calendar/LeafSpaceSpaceTide1@leaf.space/bookings/"
     )
     
-    custom_text = st.text_input(
-        "Enter text to display below QR code:",
-        "SCAN ME"
-    )
-    
     if st.button("Generate QR Code"):
-        qr_image = generate_custom_qr_code(url, custom_text)
-        if qr_image:
-            st.image(qr_image, caption="Generated QR Code", use_container_width=True)
-            
-            # Prepare download
+        qr_img = generate_custom_qr_code(url)
+        if qr_img:
             buf = io.BytesIO()
-            qr_image.save(buf, format="PNG")
+            qr_img.save(buf, format="PNG")
+            st.image(buf.getvalue(), caption="Your Custom QR Code", use_container_width=True)
+            st.success("QR Code generated!")
+            buf = io.BytesIO()
+            qr_img.save(buf, format="PNG")
             st.download_button(
                 label="Download QR Code",
                 data=buf.getvalue(),
